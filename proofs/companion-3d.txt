@@ -1,0 +1,8 @@
+goto file:///D:/BlueStone/Scratch/riemann-newton-atlas-repo/3d/atlas3d.html
+BOOT   : {"degree":3,"roots":3,"grid":224,"classified":50624,"total":50625,"entropy":0.9999,"dim":1.22,"segments":3502,"curves":640,"buildMs":1432,"drawCalls":6,"triangles":102560}
+PIXELS : {"litPct":0.7995007936507936,"colPct":0.7922325396825397}
+DEG-12 : {"degree":12,"roots":12,"grid":224,"classified":39956,"total":50625,"entropy":0.9969,"dim":1.442,"segments":5416,"curves":569,"buildMs":398,"drawCalls":6,"triangles":109040}
+CUSTOM : {"degree":3,"roots":3,"grid":224,"classified":50625,"total":50625,"entropy":0.9367,"dim":0.882,"segments":1238,"curves":640,"buildMs":316,"drawCalls":6,"triangles":102560}
+DRAG   : {"moved":{"re":0.2,"im":0.9},"dim":1.002,"classified":50625}
+
+=== COMPANION CHECK: ALL CHECKS PASS (headless SwiftShader) ===

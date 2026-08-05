@@ -26,4 +26,6 @@ These names credit the mathematical lineage of the techniques. No endorsement or
 
 Hermes reported the original implementation result and disclosed its known visualization limitation. Codex independently reran the frozen visible harness at 100/100, reran the supplemental stress suite at 48/48, confirmed frozen-harness integrity, inspected the final rendering, and published the reproducible artifact package.
 
+The 3D companion (`3d/`) was built later (2026-08-05) by Hermes Agent on the same verified numerical core and carries its own headless verification receipt ([`proofs/companion-3d.txt`](proofs/companion-3d.txt), re-runnable via `3d/verify-companion.js`). The frozen benchmark `index.html` was not modified.
+
 See [PROVENANCE.md](PROVENANCE.md) and the files under [`proofs/`](proofs/) for the timestamped evidence chain and reproducible receipts.
