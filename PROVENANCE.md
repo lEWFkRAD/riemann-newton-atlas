@@ -46,6 +46,19 @@ Expected results are recorded in [`proofs/visible-harness.txt`](proofs/visible-h
 
 The raw Hermes session export is intentionally not published because its injected memory context contains unrelated private machine and project information. The timeline above contains only sanitized benchmark-relevant facts.
 
+## Kerr Light Cathedral addition — August 5, 2026
+
+| Time | Event | Evidence |
+|---|---|---|
+| 07:32 | Codex created the unsolved Kerr Light Cathedral bonus benchmark. | Starter file and shared agent wiki. |
+| 11:31 | Hermes/Qwen completed the CPU solver, renderer, notes, and verification package. | Source timestamps and retained receipts. |
+| 11:38 | Full 560×380 CPU render completed with all 212,800 pixels classified. | `kerr-light-cathedral/receipts/cathedral-render.png` and text receipt. |
+| 11:45 | Codex independently reran the numerical suite and performed randomized/extreme-view audits. | Independent review record; 100/100 plus 16/16 reproduced. |
+| 11:49 | Hermes/Qwen completed the animated WebGL2 edition. | `kerr-light-cathedral/cathedral-live.html`. |
+| 11:52 | Live shader smoke verification passed, including measured brightness asymmetry. | `kerr-light-cathedral/verify-live.log` and `receipts/verify-live.png`. |
+
+The independent audit found one material visualization limitation: the CPU renderer shades disk crossings at accepted-step endpoints instead of using the implemented segment localizer. This does not alter the frozen numerical score, but it is disclosed in the project README.
+
 ## Known limitation
 
 Hermes explicitly disclosed that dense atlas pixels use capped discrete Newton iteration rather than an RK45 trajectory for every pixel. The exported RK45 API itself passes its visible numerical checks. This distinction is preserved in `NOTES.md`, the README, and the public review record.

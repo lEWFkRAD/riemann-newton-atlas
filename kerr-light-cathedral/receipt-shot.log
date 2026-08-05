@@ -1,0 +1,7 @@
+full-res render started (560×380, quality balanced)…
+  …2s elapsed, overlay=tracing 11%
+  …12s elapsed, overlay=tracing 70%
+render status: Rendered 560×380 in 16.7s — disk hits 119187, escaped 78709, captured 14904. Click the image to inspect a ray.
+stats: {"hits":119187,"escapes":78709,"captures":14904}
+saved cathedral-render.png
+RECEIPT-SHOT: SUCCESS

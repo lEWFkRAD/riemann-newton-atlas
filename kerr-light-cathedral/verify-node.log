@@ -1,0 +1,34 @@
+=== PART A: frozen visible grader (verbatim) ===
+  PASS  10/...  Kerr metric limits
+  PASS  10/...  Metric inverse
+  PASS  10/...  Christoffel connection
+  PASS   8/...  Conserved quantities
+  PASS   8/...  Null Hamiltonian
+  PASS  10/...  Carter potentials
+  PASS  10/...  Hamiltonian flow
+  PASS  12/...  Adaptive RK45 event
+  PASS   7/...  Disk event localization
+  PASS   7/...  Relativistic redshift
+  PASS   4/...  Screen ray tetrad
+  PASS   4/...  Deterministic tile cover
+  VISIBLE SCORE: 100/100
+
+=== PART B: physics probes ===
+  PASS  geodesic conservation (a=0.7, inclined, deflected escape)
+  PASS  time-reversal round trip (Schwarzschild scatter)
+  PASS  conservation across disk crossing (Q=0 equatorial ray)
+  PASS  near-polar ray (theta=0.02, a=0.9)
+  PASS  horizon capture event (inward ray, a=0.5)
+  PASS  escape event + asymptotic direction
+  PASS  backwards integration (t1 < t0)
+  PASS  tolerance sweep 1e-5..1e-11 (exp ODE)
+  PASS  disk localization edge cases
+  PASS  Christoffel vs analytic Schwarzschild (r=7, several components)
+  PASS  inverse4 on extreme configs (a=0.995M, theta=1e-3, r=r+*1.01)
+  PASS  input immutability (all public functions)
+  PASS  determinism under shuffled call order
+  PASS  tileOrder degenerate/odd inputs
+  PASS  redshiftFactor identity & beaming sanity
+  PASS  screenRay null condition grid (5 spins x 9 pixels)
+
+=== RESULT: visible 100/100, physics failures 0 ===

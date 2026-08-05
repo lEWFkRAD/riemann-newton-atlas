@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hermes Bonus Crucible — The Kerr Light Cathedral</title>
+<style>
+:root{color-scheme:dark;--bg:#05030a;--panel:#0b0812e8;--line:#3f2b55;--text:#fff6e8;--muted:#bcaec7;--gold:#ffca55;--ember:#ff6b35;--violet:#9b6cff;--cyan:#55e6ff;--bad:#ff5478;--good:#62f6a9}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 52% 10%,#21102c 0,#0a0711 38%,var(--bg) 75%);color:var(--text);font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}.wrap{width:min(1180px,calc(100% - 32px));margin:auto;padding:38px 0 80px}.hero{position:relative;overflow:hidden;min-height:480px;border:1px solid #6f4375;border-radius:28px;background:linear-gradient(125deg,#09050eaa,#13071999);box-shadow:0 30px 90px #0009;isolation:isolate}#space{position:absolute;inset:0;width:100%;height:100%;z-index:-2}.veil{position:absolute;inset:0;background:linear-gradient(90deg,#07040dec 0%,#07040dc5 48%,transparent 76%);z-index:-1}.hero-copy{padding:68px;max-width:760px}.eyebrow{font:700 11px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.24em;color:var(--gold);text-transform:uppercase}.bonus{display:inline-block;margin-left:8px;padding:4px 8px;border:1px solid #ffca5570;border-radius:999px;color:var(--gold);letter-spacing:.14em}h1{font-size:clamp(54px,8vw,94px);line-height:.82;letter-spacing:-.065em;margin:32px 0 26px;max-width:900px}h1 span{display:block;background:linear-gradient(90deg,var(--gold),var(--ember) 42%,var(--violet) 82%);-webkit-background-clip:text;background-clip:text;color:transparent}.lede{font-size:19px;color:#d9cedd;max-width:650px}.tags{display:flex;flex-wrap:wrap;gap:9px;margin-top:27px}.tag{border:1px solid #765b83;border-radius:999px;padding:5px 11px;background:#0b0713a8;font:12px ui-monospace,monospace}.layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;margin-top:18px}.panel{border:1px solid #372a44;border-radius:18px;background:var(--panel);padding:24px;box-shadow:0 18px 60px #0005}.panel h2{font-size:18px;margin:0 0 18px}.panel h3{font-size:14px;color:var(--gold);margin:24px 0 8px}.mission li{margin:9px 0}.mission code,.lock code{color:var(--gold);background:#1a101d;padding:2px 5px;border-radius:4px}.score{position:sticky;top:18px;height:max-content}.scoreline{display:flex;align-items:baseline;gap:9px;margin:4px 0 16px}.big{font:700 52px/1 ui-monospace,monospace;color:var(--gold)}.bar{height:10px;background:#24192d;border-radius:99px;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--ember),var(--gold),var(--violet));transition:width .35s}.tests{list-style:none;padding:0;margin:16px 0}.tests li{display:flex;align-items:center;gap:8px;padding:3px 0;font:12px ui-monospace,monospace;color:#ff8199}.dot{width:8px;height:8px;border-radius:50%;background:var(--bad);flex:none}.pts{margin-left:auto}.run{border:0;border-radius:10px;background:linear-gradient(90deg,var(--gold),var(--ember),var(--violet));color:#100914;font-weight:800;padding:12px 15px;cursor:pointer}.run:disabled{opacity:.6}.status{color:var(--muted);margin-top:13px}.lock{margin-top:18px;border-color:#574064}.warning{color:#ffb174}.candidate-stage{min-height:290px;display:grid;place-items:center;border:1px dashed #624b71;border-radius:14px;background:radial-gradient(circle,#160d20,#08050c 70%);text-align:center;padding:24px;color:var(--muted)}.candidate-stage strong{display:block;color:var(--text);font-size:19px;margin-bottom:7px}.footer{color:#85788e;text-align:center;font:12px ui-monospace,monospace;margin-top:24px}@media(max-width:850px){.layout{grid-template-columns:1fr}.score{position:static}.hero-copy{padding:42px 28px}.hero{min-height:520px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.fill{transition:none}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<section class="hero"><canvas id="space" aria-label="Animated stylized Kerr black hole and warped photon ring"></canvas><div class="veil"></div><div class="hero-copy">
+<div class="eyebrow">Hermes adversarial showcase · relativistic ray tracing <span class="bonus">unsolved bonus</span></div>
+<h1>The Kerr <span>Light Cathedral</span></h1>
+<p class="lede">Ray-trace a spinning black hole from the metric itself. Bend light, cross an accretion disk, preserve null geodesics, and make the shadow sing without numerical lies.</p>
+<div class="tags"><span class="tag">Kerr spacetime</span><span class="tag">Hamiltonian geodesics</span><span class="tag">adaptive RK45</span><span class="tag">event localization</span><span class="tag">relativistic redshift</span><span class="tag">progressive renderer</span></div>
+</div></section>
+
+<div class="layout">
+<section class="panel mission"><h2>Bonus mission</h2>
+<p>Edit only the <code>CANDIDATE IMPLEMENTATION</code> block and the marked cathedral container. Build a dependency-free Kerr null-geodesic engine and an interactive gravitational-lensing instrument.</p>
+<ol>
+<li>Implement the Boyer–Lindquist Kerr metric, a stable symmetric 4×4 inverse, numerical Christoffel symbols, covariant constants of motion, and the null Hamiltonian.</li>
+<li>Implement Carter radial/polar potentials and Hamiltonian geodesic flow with an adaptive Dormand–Prince 5(4) integrator that localizes horizon, escape, and disk events.</li>
+<li>Construct camera rays from a local orthonormal tetrad, compute emitter-to-observer redshift, intersect the thin disk robustly, and schedule every render tile exactly once.</li>
+<li>Replace the empty cathedral with a progressive, cancellable black-hole renderer: photon ring, lensed star field, Doppler-bright disk, draggable camera, spin/inclination controls, ray inspector, conserved-quantity error plot, keyboard access, and PNG export.</li>
+</ol>
+<h3>Numerical contract</h3><p>Coordinates are <code>[t,r,theta,phi]</code>; covariant momenta are <code>[pt,pr,pTheta,pPhi]</code>; state is their 8-value concatenation. Units use <code>G=c=1</code>. Metric signature is <code>(−,+,+,+)</code>. Public functions must never mutate inputs, must stay finite outside the outer horizon, and must behave deterministically across call order.</p>
+<h3>Hidden-test axes</h3><p>Expect <code>M=0.2…8</code>, <code>|a|≤0.995M</code>, near-polar and near-equatorial rays, grazing disk events, horizon approaches, backwards integration, tolerances from <code>1e−5…1e−11</code>, shuffled calls, and degenerate tiles. Hard-coded reference images or canned trajectories fail.</p>
+<h3>Submission</h3><p>Return the edited <code>index.html</code> and a concise <code>NOTES.md</code> explaining equations, error controls, cancellation strategy, accessibility, performance, and remaining limitations. The visible 100 is necessary, not sufficient.</p>
+</section>
+
+<aside class="panel score"><h2>Cathedral score</h2><div class="scoreline"><span class="big" id="score">0</span><span>/ 100</span></div><div class="bar"><div class="fill" id="fill"></div></div><ul class="tests" id="tests"></ul><button class="run" id="run">Run spacetime checks</button><div class="status" id="status">Core absent. Spacetime remains dark.</div></aside>
+</div>
+
+<section class="panel lock"><h2>Candidate cathedral</h2><div id="candidate-cathedral" class="candidate-stage"><div><strong>NO PHOTONS TRACED</strong>Implement the numerical core, then replace this marked container with the interactive lensing observatory.</div></div><p class="warning">Guardrail: do not modify the frozen grader, its test vectors, point values, or DOM identifiers. The grader snapshots its own source at load and invalidates altered contracts.</p></section>
+<div class="footer">BONUS FIXTURE · KERR-LIGHT-CATHEDRAL · STARTER EXPECTED 0/100</div>
+</main>
+
+<script>
+/* ==================== CANDIDATE IMPLEMENTATION: EDIT THIS BLOCK ==================== */
+const candidate={
+  kerrMetricBL(M,a,r,theta){ /* TODO */ },
+  inverse4(matrix){ /* TODO */ },
+  christoffel(M,a,position,h=1e-5){ /* TODO */ },
+  constantsOfMotion(M,a,state,mu=0){ /* TODO */ },
+  nullHamiltonian(M,a,state){ /* TODO */ },
+  carterPotentials(M,a,r,theta,E,Lz,Q,mu=0){ /* TODO */ },
+  geodesicRHS(M,a,state){ /* TODO */ },
+  rk45Event(rhs,y0,t0,t1,options={}){ /* TODO */ },
+  localizeDiskEvent(p0,p1,innerRadius,outerRadius){ /* TODO */ },
+  redshiftFactor(photonCovariant,uObserver,uEmitter){ /* TODO */ },
+  screenRay(M,a,camera,pixel){ /* TODO */ },
+  tileOrder(width,height,tileSize){ /* TODO */ }
+};
+/* ================== END CANDIDATE IMPLEMENTATION: DO NOT CROSS ================== */
+
+/* FROZEN VISIBLE GRADER — altering this block invalidates the submission. */
+(()=>{'use strict';
+const frozen=document.currentScript.textContent.split('/* FROZEN VISIBLE GRADER')[1];
+const close=(a,b,t=1e-8)=>Number.isFinite(a)&&Math.abs(a-b)<=t*Math.max(1,Math.abs(a),Math.abs(b));
+const identErr=(A,B)=>{let e=0;for(let i=0;i<4;i++)for(let j=0;j<4;j++){let s=0;for(let k=0;k<4;k++)s+=A[i][k]*B[k][j];e=Math.max(e,Math.abs(s-(i===j?1:0)))}return e};
+const dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0);
+const checks=[
+['Kerr metric limits',10,()=>{const g=candidate.kerrMetricBL(1,0,10,Math.PI/2);return close(g[0][0],-.8)&&close(g[1][1],1.25)&&close(g[2][2],100)&&close(g[3][3],100)&&close(g[0][3],0)}],
+['Metric inverse',10,()=>{const g=candidate.kerrMetricBL(1,.7,6,1.1),q=candidate.inverse4(g);return identErr(g,q)<2e-10&&identErr(q,g)<2e-10}],
+['Christoffel connection',10,()=>{const G=candidate.christoffel(1,0,[0,10,Math.PI/2,0],1e-5);return close(G[1][0][0],.008,2e-6)&&close(G[0][0][1],.0125,2e-6)&&close(G[3][1][3],.1,2e-6)&&close(G[1][0][0],G[1][0][0])}],
+['Conserved quantities',8,()=>{const s=[0,8,Math.PI/2,.2,-1,.3,0,2.5],q=candidate.constantsOfMotion(1,.6,s,0);return close(q.E,1)&&close(q.Lz,2.5)&&Math.abs(q.Q)<1e-10}],
+['Null Hamiltonian',8,()=>{const f=.8,s=[0,10,Math.PI/2,0,-1,1/f,0,0];return Math.abs(candidate.nullHamiltonian(1,0,s))<1e-10}],
+['Carter potentials',10,()=>{const q=candidate.carterPotentials(1,0,7,Math.PI/2,1,0,0,0);return close(q.R,2401)&&Math.abs(q.Theta)<1e-12}],
+['Hamiltonian flow',10,()=>{const f=.8,s=[0,10,Math.PI/2,0,-1,1/f,0,0],d=candidate.geodesicRHS(1,0,s);return close(d[0],1/f,2e-7)&&close(d[1],1,2e-7)&&Math.abs(d[2])<1e-9&&Math.abs(d[3])<1e-9}],
+['Adaptive RK45 event',12,()=>{const out=candidate.rk45Event((t,y)=>[y[0]],[1],0,2,{rtol:1e-9,atol:1e-11,event:(t,y)=>y[0]-2});return out&&out.event&&close(out.t,Math.log(2),2e-7)&&close(out.y[0],2,2e-8)&&out.accepted>0}],
+['Disk event localization',7,()=>{const q=candidate.localizeDiskEvent([3,4,2],[5,8,-2],4,8);return q&&close(q.position[0],4)&&close(q.position[1],6)&&close(q.position[2],0)&&close(q.radius,Math.sqrt(52))}],
+['Relativistic redshift',7,()=>{const p=[-2,.3,0,5],uo=[1,0,0,0],ue=[1.25,0,0,.05];return close(candidate.redshiftFactor(p,uo,ue),2/2.25,1e-12)}],
+['Screen ray tetrad',4,()=>{const q=candidate.screenRay(1,.5,{r:20,theta:1.2,phi:.4,fov:1.0},{x:0,y:0});return q&&q.state&&q.state.length===8&&Math.abs(candidate.nullHamiltonian(1,.5,q.state))<2e-9&&q.state[4]<0}],
+['Deterministic tile cover',4,()=>{const a=candidate.tileOrder(35,19,8),b=candidate.tileOrder(35,19,8);if(JSON.stringify(a)!==JSON.stringify(b)||a.length!==15)return false;const seen=new Set;for(const t of a){if(t.x<0||t.y<0||t.w<=0||t.h<=0||t.x+t.w>35||t.y+t.h>19)return false;for(let y=t.y;y<t.y+t.h;y++)for(let x=t.x;x<t.x+t.w;x++){const k=x+','+y;if(seen.has(k))return false;seen.add(k)}}return seen.size===35*19}]
+];
+const list=document.getElementById('tests'),score=document.getElementById('score'),fill=document.getElementById('fill'),status=document.getElementById('status'),run=document.getElementById('run');
+const paint=(results,total)=>{list.innerHTML='';for(const [name,pts,ok] of results){const li=document.createElement('li');li.style.color=ok?'var(--good)':'#ff8199';li.innerHTML='<span class="dot" style="background:'+(ok?'var(--good)':'var(--bad)')+'"></span><span>'+name+'</span><span class="pts">'+(ok?pts:0)+'/'+pts+'</span>';list.appendChild(li)}score.textContent=total;fill.style.width=total+'%';status.textContent=total===100?'Visible spacetime checks pass. Hidden invariants remain.':'Core incomplete or numerically unstable.'};
+paint(checks.map(x=>[x[0],x[1],false]),0);
+run.addEventListener('click',async()=>{run.disabled=true;status.textContent='Tracing invariant probes…';await new Promise(r=>setTimeout(r,30));let total=0;const results=[];for(const [name,pts,test] of checks){let ok=false;try{ok=test()===true}catch(e){}if(ok)total+=pts;results.push([name,pts,ok])}paint(results,total);run.disabled=false});
+Object.freeze(checks);Object.freeze(candidate);
+
+const canvas=document.getElementById('space'),ctx=canvas.getContext('2d');let w=0,h=0,stars=[],tick=0;
+const seeded=n=>{const v=Math.sin(n*12.9898+78.233)*43758.5453;return v-Math.floor(v)};
+function resize(){const d=Math.min(devicePixelRatio||1,2),r=canvas.getBoundingClientRect();w=r.width;h=r.height;canvas.width=w*d;canvas.height=h*d;ctx.setTransform(d,0,0,d,0,0);stars=Array.from({length:130},(_,i)=>({x:seeded(i*4+1)*w,y:seeded(i*4+2)*h,s:.4+seeded(i*4+3)*1.8,p:seeded(i*4+4)*6.28,c:i%9===0?'#55e6ff':i%7===0?'#ffca55':'#ffffff'}))}
+function frame(loop=true){tick+=.006;ctx.clearRect(0,0,w,h);ctx.globalAlpha=.35;for(const s of stars){ctx.fillStyle=s.c;ctx.globalAlpha=.18+.28*(.5+.5*Math.sin(tick*2+s.p));ctx.beginPath();ctx.arc(s.x,s.y,s.s,0,7);ctx.fill()}const x=w*.78,y=h*.5,R=Math.min(w,h)*.145;ctx.globalAlpha=1;for(let i=0;i<8;i++){ctx.strokeStyle=`hsla(${28+i*9},95%,${58+i*2}%,${.1+i*.055})`;ctx.lineWidth=1+i*1.6;ctx.beginPath();ctx.ellipse(x,y,R*(1.4+i*.065),R*(.36+i*.022),-.2+Math.sin(tick)*.025,0,Math.PI*2);ctx.stroke()}const halo=ctx.createRadialGradient(x,y,R*.65,x,y,R*1.35);halo.addColorStop(0,'#000');halo.addColorStop(.58,'#000');halo.addColorStop(.72,'#ff7a2635');halo.addColorStop(.82,'#a06cff25');halo.addColorStop(1,'transparent');ctx.fillStyle=halo;ctx.beginPath();ctx.arc(x,y,R*1.4,0,7);ctx.fill();ctx.fillStyle='#000';ctx.beginPath();ctx.arc(x,y,R*.77,0,7);ctx.fill();if(loop)requestAnimationFrame(()=>frame(true))}
+addEventListener('resize',resize,{passive:true});resize();frame(!matchMedia('(prefers-reduced-motion: reduce)').matches);
+})();
+</script>
+</body></html>

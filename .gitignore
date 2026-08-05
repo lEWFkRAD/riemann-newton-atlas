@@ -2,3 +2,8 @@ verification/node_modules/
 verification/package-lock.json
 3d/node_modules/
 3d/package-lock.json
+kerr-light-cathedral/.chrome-profile/
+kerr-light-cathedral/verify-chrome.png
+kerr-light-cathedral/verify-chrome-canvas.png
+kerr-light-cathedral/verify-live.png
+kerr-light-cathedral/cathedral-render.png

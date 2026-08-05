@@ -1,0 +1,488 @@
+/* ============================================================================
+ * CANDIDATE NUMERICAL CORE — Kerr null-geodesic engine
+ * Convention: coordinates x = [t, r, theta, phi]; covariant momenta
+ * p = [pt, pr, pTheta, pPhi]; state = x.concat(p). G = c = 1, signature (-,+,+,+).
+ * All functions are pure: no shared mutable state, no input mutation,
+ * deterministic across call order.
+ * ==========================================================================*/
+
+/* --- internal helpers (not part of the public contract) ------------------ */
+
+function _kerrParts(M, a, r, theta) {
+  const ct = Math.cos(theta), st = Math.sin(theta);
+  const S = r * r + a * a * ct * ct;           // Sigma
+  const D = r * r - 2 * M * r + a * a;         // Delta
+  const A = (r * r + a * a) * (r * r + a * a) - D * a * a * st * st;
+  return { S, D, A, ct, st };
+}
+
+/* Analytic inverse Kerr-BL metric (contravariant components). More accurate
+ * and cheaper than a generic 4x4 inversion, used by the flow and Hamiltonian. */
+function _kerrInverse(M, a, r, theta) {
+  const { S, D, A, st } = _kerrParts(M, a, r, theta);
+  const s2 = Math.max(st * st, 1e-150);
+  const gI = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+  gI[0][0] = -A / (S * D);
+  gI[0][3] = gI[3][0] = -2 * M * a * r / (S * D);
+  gI[1][1] = D / S;
+  gI[2][2] = 1 / S;
+  gI[3][3] = (D - a * a * st * st) / (S * D * s2);
+  return gI;
+}
+
+/* Quadratic form g_ab v^a v^b at a coordinate point (used for directional
+ * derivatives of the metric in the Hamiltonian momentum equation). */
+function _quadForm(M, a, r, theta, v) {
+  const g = kerrMetricBL(M, a, r, theta);
+  let s = 0;
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) s += g[i][j] * v[i] * v[j];
+  return s;
+}
+
+/* Central/one-sided finite difference of the metric quadratic form along
+ * coordinate mu (1=r, 2=theta), guarding the theta axis and the horizon. */
+function _dQuad(M, a, x, v, mu) {
+  const Mm = Math.abs(M) + 1e-300;
+  const rp = M + Math.sqrt(Math.max(M * M - a * a, 0));   // outer horizon
+  let h = mu === 1 ? 1e-6 * Math.max(1, Math.abs(x[1]), Mm) : 1e-7;
+  const xp = x.slice(), xm = x.slice();
+  xp[mu] = x[mu] + h; xm[mu] = x[mu] - h;
+  if (mu === 2) {
+    if (xm[2] <= 1e-12) {                    // forward 2nd-order at north pole
+      xm[2] = x[2] + 2 * h;
+      return (-3 * _quadForm(M, a, x[1], x[2], v) + 4 * _quadForm(M, a, x[1], xp[2], v) - _quadForm(M, a, x[1], xm[2], v)) / (2 * h);
+    }
+    if (xp[2] >= Math.PI - 1e-12) {          // backward 2nd-order at south pole
+      xp[2] = x[2] - 2 * h;
+      return (3 * _quadForm(M, a, x[1], x[2], v) - 4 * _quadForm(M, a, x[1], xm[2], v) + _quadForm(M, a, x[1], xp[2], v)) / (2 * h);
+    }
+  }
+  if (mu === 1 && xm[1] <= rp + 1e-10) {     // forward 2nd-order near horizon
+    xm[1] = x[1] + 2 * h;
+    return (-3 * _quadForm(M, a, x[1], x[2], v) + 4 * _quadForm(M, a, xp[1], x[2], v) - _quadForm(M, a, xm[1], x[2], v)) / (2 * h);
+  }
+  return (_quadForm(M, a, xp[1], xp[2], v) - _quadForm(M, a, xm[1], xm[2], v)) / (2 * h);
+}
+
+/* --- 1. Kerr metric in Boyer-Lindquist coordinates ----------------------- */
+
+function kerrMetricBL(M, a, r, theta) {
+  const { S, D, A, st } = _kerrParts(M, a, r, theta);
+  const s2 = st * st;
+  return [
+    [-(1 - 2 * M * r / S), 0, 0, -2 * M * a * r * s2 / S],
+    [0, S / D, 0, 0],
+    [0, 0, S, 0],
+    [-2 * M * a * r * s2 / S, 0, 0, A * s2 / S]
+  ];
+}
+
+/* --- 2. Generic 4x4 inverse (Gauss-Jordan, partial pivoting) ------------- */
+
+function inverse4(matrix) {
+  const A = [];
+  for (let i = 0; i < 4; i++) {
+    A.push([matrix[i][0], matrix[i][1], matrix[i][2], matrix[i][3],
+      i === 0 ? 1 : 0, i === 1 ? 1 : 0, i === 2 ? 1 : 0, i === 3 ? 1 : 0]);
+  }
+  for (let c = 0; c < 4; c++) {
+    let p = c;
+    for (let r2 = c + 1; r2 < 4; r2++) if (Math.abs(A[r2][c]) > Math.abs(A[p][c])) p = r2;
+    if (p !== c) { const t = A[p]; A[p] = A[c]; A[c] = t; }
+    const piv = A[c][c];
+    if (!Number.isFinite(piv) || Math.abs(piv) < 1e-300) {
+      return [[NaN, NaN, NaN, NaN], [NaN, NaN, NaN, NaN], [NaN, NaN, NaN, NaN], [NaN, NaN, NaN, NaN]];
+    }
+    for (let j = 0; j < 8; j++) A[c][j] /= piv;
+    for (let r2 = 0; r2 < 4; r2++) {
+      if (r2 === c) continue;
+      const f = A[r2][c];
+      if (f !== 0) for (let j = 0; j < 8; j++) A[r2][j] -= f * A[c][j];
+    }
+  }
+  return A.map(row => row.slice(4));
+}
+
+/* --- 3. Numerical Christoffel symbols ------------------------------------ */
+
+function christoffel(M, a, position, h = 1e-5) {
+  const x = position.slice();
+  const Mm = Math.abs(M) + 1e-300;
+  const rp = M + Math.sqrt(Math.max(M * M - a * a, 0));
+  const g = kerrMetricBL(M, a, x[1], x[2]);
+  const gI = _kerrInverse(M, a, x[1], x[2]);
+  // dgd[mu][al][be] = partial_mu g_{al be}; t and phi are Killing directions.
+  const dgd = [null, null, null, null];
+  for (const mu of [1, 2]) {
+    const xp = x.slice(), xm = x.slice();
+    let hh = h;
+    let mode = 0; // 0 central, 1 forward, 2 backward
+    if (mu === 2) {
+      if (x[2] - hh <= 1e-12) mode = 1;
+      else if (x[2] + hh >= Math.PI - 1e-12) mode = 2;
+    } else if (x[1] - hh <= rp + 1e-10) mode = 1;
+    if (mode === 1) { xp[mu] = x[mu] + hh; xm[mu] = x[mu] + 2 * hh; }
+    else if (mode === 2) { xp[mu] = x[mu] - 2 * hh; xm[mu] = x[mu] - hh; }
+    else { xp[mu] = x[mu] + hh; xm[mu] = x[mu] - hh; }
+    const gp = kerrMetricBL(M, a, xp[1], xp[2]);
+    const gm = kerrMetricBL(M, a, xm[1], xm[2]);
+    const d = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+    for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
+      if (mode === 1) d[i][j] = (-3 * g[i][j] + 4 * gp[i][j] - gm[i][j]) / (2 * hh);
+      else if (mode === 2) d[i][j] = (3 * g[i][j] - 4 * gm[i][j] + gp[i][j]) / (2 * hh);
+      else d[i][j] = (gp[i][j] - gm[i][j]) / (2 * hh);
+    }
+    dgd[mu] = d;
+  }
+  const G = [];
+  for (let i = 0; i < 4; i++) {
+    const Gi = [];
+    for (let j = 0; j < 4; j++) {
+      const Gij = [0, 0, 0, 0];
+      for (let k = 0; k < 4; k++) {
+        let s = 0;
+        for (let l = 0; l < 4; l++) {
+          const t1 = dgd[j] ? dgd[j][k][l] : 0;
+          const t2 = dgd[k] ? dgd[k][j][l] : 0;
+          const t3 = dgd[l] ? dgd[l][j][k] : 0;
+          s += gI[i][l] * (t1 + t2 - t3);
+        }
+        Gij[k] = 0.5 * s;
+      }
+      Gi.push(Gij);
+    }
+    G.push(Gi);
+  }
+  return G;
+}
+
+/* --- 4. Constants of motion (covariant) ---------------------------------- */
+
+function constantsOfMotion(M, a, state, mu = 0) {
+  const E = -state[4];
+  const Lz = state[7];
+  const pTh = state[6];
+  const theta = state[2];
+  const ct = Math.cos(theta), st = Math.sin(theta);
+  const s2 = Math.max(st * st, 1e-150);
+  const Q = pTh * pTh + ct * ct * (a * a * (mu * mu - E * E) + Lz * Lz / s2);
+  return { E, Lz, Q };
+}
+
+/* --- 5. Null Hamiltonian H = 1/2 g^{mu nu} p_mu p_nu --------------------- */
+
+function nullHamiltonian(M, a, state) {
+  const gI = _kerrInverse(M, a, state[1], state[2]);
+  const p = [state[4], state[5], state[6], state[7]];
+  let s = 0;
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) s += gI[i][j] * p[i] * p[j];
+  return 0.5 * s;
+}
+
+/* --- 6. Carter radial / polar potentials ---------------------------------- */
+
+function carterPotentials(M, a, r, theta, E, Lz, Q, mu = 0) {
+  const D = r * r - 2 * M * r + a * a;
+  const ct = Math.cos(theta), st = Math.sin(theta);
+  const s2 = Math.max(st * st, 1e-150);
+  const t1 = (r * r + a * a) * E - a * Lz;
+  const K = (Lz - a * E) * (Lz - a * E) + Q + mu * mu * r * r;
+  const R = t1 * t1 - D * K;
+  const Theta = Q - ct * ct * (a * a * (mu * mu - E * E) + Lz * Lz / s2);
+  return { R, Theta };
+}
+
+/* --- 7. Hamiltonian geodesic flow ----------------------------------------
+ * dx^mu/dlambda = g^{mu nu} p_nu   (analytic inverse metric)
+ * dp_mu/dlambda = 1/2 partial_mu g_{ab} xdot^a xdot^b
+ *                 (analytic metric derivatives; exact 0 for t, phi)
+ * Hot path of the renderer: one trig pass, no intermediate arrays.
+ * -------------------------------------------------------------------------- */
+
+function geodesicRHS(M, a, state) {
+  const r = state[1], th = state[2];
+  const ct = Math.cos(th), st = Math.sin(th);
+  const c2 = ct * ct;
+  const s2 = Math.max(st * st, 1e-150);
+  const S = r * r + a * a * c2;
+  const D = r * r - 2 * M * r + a * a;
+  const A = (r * r + a * a) * (r * r + a * a) - D * a * a * s2;
+  const SD = S * D, S2 = S * S, D2 = D * D;
+
+  /* xdot = g^{mu nu} p_nu */
+  const pt = state[4], pr = state[5], pth = state[6], pph = state[7];
+  const itt = -A / SD, itphi = -2 * M * a * r / SD;
+  const irr = D / S, ithth = 1 / S, ipp = (D - a * a * s2) / (SD * s2);
+  const x0 = itt * pt + itphi * pph;
+  const x1 = irr * pr;
+  const x2 = ithth * pth;
+  const x3 = itphi * pt + ipp * pph;
+
+  /* analytic metric derivatives, reusing S, D, A, trig */
+  const dSdth = -2 * a * a * st * ct;
+  const dDdr = 2 * r - 2 * M;
+  const dAdr = 4 * r * (r * r + a * a) - a * a * s2 * dDdr;
+  const dAdth = -D * a * a * 2 * st * ct;
+  const dtt_dr = 2 * M * (a * a * c2 - r * r) / S2;
+  const dtphi_dr = 2 * M * a * s2 * (r * r - a * a * c2) / S2;
+  const drr_dr = (2 * r * D - S * dDdr) / D2;
+  const dthth_dr = 2 * r;
+  const dpp_dr = s2 * (dAdr * S - A * 2 * r) / S2;
+  const dtt_dth = 4 * M * r * a * a * st * ct / S2;
+  const dtphi_dth = -2 * M * a * r * (2 * st * ct * S - s2 * dSdth) / S2;
+  const drr_dth = dSdth / D;
+  const dthth_dth = dSdth;
+  const dpp_dth = 2 * st * ct * A / S + s2 * (dAdth * S - A * dSdth) / S2;
+
+  const qr = dtt_dr * x0 * x0 + 2 * dtphi_dr * x0 * x3 + drr_dr * x1 * x1 + dthth_dr * x2 * x2 + dpp_dr * x3 * x3;
+  const qth = dtt_dth * x0 * x0 + 2 * dtphi_dth * x0 * x3 + drr_dth * x1 * x1 + dthth_dth * x2 * x2 + dpp_dth * x3 * x3;
+  return [x0, x1, x2, x3, 0, 0.5 * qr, 0.5 * qth, 0];
+}
+
+/* --- 8. Adaptive Dormand-Prince 5(4) integrator with event localization -- */
+
+const _DP = {
+  a2: [1 / 5],
+  a3: [3 / 40, 9 / 40],
+  a4: [44 / 45, -56 / 15, 32 / 9],
+  a5: [19372 / 6561, -25360 / 2187, 64448 / 6561, -212 / 729],
+  a6: [9017 / 3168, -355 / 33, 46732 / 5247, 49 / 176, -5103 / 18656],
+  b: [35 / 384, 0, 500 / 1113, 125 / 192, -2187 / 6784, 11 / 84, 0],
+  /* error coefficients e = b - b* (5th-order minus 4th-order embedded) */
+  e: [71 / 57600, 0, -71 / 16695, 71 / 1920, -17253 / 339200, 22 / 525, -1 / 40]
+};
+
+function rk45Event(rhs, y0, t0, t1, options = {}) {
+  const n = y0.length;
+  const rtol = options.rtol !== undefined ? options.rtol : 1e-9;
+  const atol = options.atol !== undefined ? options.atol : 1e-12;
+  const maxSteps = options.maxSteps !== undefined ? options.maxSteps : 200000;
+  const event = options.event || null;
+  const onStep = options.onStep || null;
+  const dir = t1 >= t0 ? 1 : -1;
+  const span = Math.abs(t1 - t0);
+  let t = t0;
+  let y = y0.slice();
+  let accepted = 0, rejected = 0, steps = 0;
+
+  if (span === 0) return { t, y, event: false, accepted, rejected, steps };
+
+  const axpy = (base, h, ks, coefs) => {
+    const out = new Array(n);
+    for (let i = 0; i < n; i++) {
+      let s = base[i];
+      for (let j = 0; j < ks.length; j++) s += h * coefs[j] * ks[j][i];
+      out[i] = s;
+    }
+    return out;
+  };
+
+  /* one DP step; returns {y5, errNorm, k1, k7}. k1Given enables FSAL reuse. */
+  const step = (tt, yy, h, k1Given) => {
+    const k1 = k1Given || rhs(tt, yy);
+    const k2 = rhs(tt + h / 5, axpy(yy, h, [k1], _DP.a2));
+    const k3 = rhs(tt + 3 * h / 10, axpy(yy, h, [k1, k2], _DP.a3));
+    const k4 = rhs(tt + 4 * h / 5, axpy(yy, h, [k1, k2, k3], _DP.a4));
+    const k5 = rhs(tt + 8 * h / 9, axpy(yy, h, [k1, k2, k3, k4], _DP.a5));
+    const k6 = rhs(tt + h, axpy(yy, h, [k1, k2, k3, k4, k5], _DP.a6));
+    const y5 = new Array(n);
+    for (let i = 0; i < n; i++) {
+      y5[i] = yy[i] + h * (_DP.b[0] * k1[i] + _DP.b[2] * k3[i] + _DP.b[3] * k4[i] + _DP.b[4] * k5[i] + _DP.b[5] * k6[i]);
+    }
+    const k7 = rhs(tt + h, y5);
+    let e2 = 0;
+    for (let i = 0; i < n; i++) {
+      const ei = h * (_DP.e[0] * k1[i] + _DP.e[2] * k3[i] + _DP.e[3] * k4[i] + _DP.e[4] * k5[i] + _DP.e[5] * k6[i] + _DP.e[6] * k7[i]);
+      const sc = atol + rtol * Math.max(Math.abs(yy[i]), Math.abs(y5[i]));
+      e2 += (ei / sc) * (ei / sc);
+    }
+    return { y5, errNorm: Math.sqrt(e2 / n), k1, k7 };
+  };
+
+  /* Event localization inside an accepted bracket [ta,tb]. Secant (Illinois-
+   * guarded, bisection fallback) on the event function; every probe state is
+   * a fresh DP5 re-integration from ta (k1 = da cached), so the reported state
+   * carries full 5th-order accuracy at ~5 rhs evals per probe instead of a
+   * dense-output guess. */
+  const localize = (ta, ya, da, tb, yb, db) => {
+    const h = tb - ta;
+    const eLo = event(ta, ya);
+    const eHi = event(tb, yb);
+    if (eLo === 0) return { t: ta, y: ya.slice() };
+    if (eHi === 0) return { t: tb, y: yb.slice() };
+    const evalAt = (u) => {
+      if (u <= 0) return { u: 0, y: ya, e: eLo };
+      if (u >= 1) return { u: 1, y: yb, e: eHi };
+      const hh = u * h;
+      const k1 = da;
+      const k2 = rhs(ta + hh / 5, axpy(ya, hh, [k1], _DP.a2));
+      const k3 = rhs(ta + 3 * hh / 10, axpy(ya, hh, [k1, k2], _DP.a3));
+      const k4 = rhs(ta + 4 * hh / 5, axpy(ya, hh, [k1, k2, k3], _DP.a4));
+      const k5 = rhs(ta + 8 * hh / 9, axpy(ya, hh, [k1, k2, k3, k4], _DP.a5));
+      const k6 = rhs(ta + hh, axpy(ya, hh, [k1, k2, k3, k4, k5], _DP.a6));
+      const ym = new Array(n);
+      for (let i = 0; i < n; i++) {
+        ym[i] = ya[i] + hh * (_DP.b[0] * k1[i] + _DP.b[2] * k3[i] + _DP.b[3] * k4[i] + _DP.b[4] * k5[i] + _DP.b[5] * k6[i]);
+      }
+      return { u, y: ym, e: event(ta + hh, ym) };
+    };
+    let lo = 0, hi = 1, eL = eLo, eH = eHi;
+    const maxEval = options.eventIterations !== undefined ? options.eventIterations : 24;
+    for (let i = 0; i < maxEval; i++) {
+      if ((hi - lo) * Math.abs(h) < 1e-13) break;
+      /* secant candidate; bisection if it leaves the safe interior */
+      let um = (eL !== eH) ? lo - eL * (hi - lo) / (eH - eL) : 0.5 * (lo + hi);
+      const margin = 0.05 * (hi - lo);
+      if (!(um > lo + margin && um < hi - margin) || !Number.isFinite(um)) um = 0.5 * (lo + hi);
+      const em = evalAt(um);
+      if (em.e === 0) return { t: ta + um * h, y: em.y };
+      if ((eL < 0) === (em.e < 0)) { lo = um; eL = em.e; }
+      else { hi = um; eH = em.e; }
+    }
+    const uStar = 0.5 * (lo + hi);
+    const fin = evalAt(uStar);
+    return { t: ta + uStar * h, y: fin.y };
+  };
+
+  let h = dir * Math.min(span, Math.max(span * 0.01, 1e-3));
+  if (options.initialStep) h = dir * Math.abs(options.initialStep);
+  const hLimit = options.maxStep ? Math.abs(options.maxStep) : Infinity;
+
+  let ePrev = event ? event(t, y) : null;
+  let k1Cache = null;   /* FSAL: rhs at current (t,y); set after acceptance */
+
+  while (dir * (t1 - t) > 0 && steps < maxSteps) {
+    let hh = Math.min(Math.abs(h), span === 0 ? 1 : Math.abs(t1 - t), hLimit) * dir;
+    if (hh === 0) break;
+    const st = step(t, y, hh, k1Cache);
+    steps++;
+    if (!Number.isFinite(st.errNorm) || st.y5.some(v => !Number.isFinite(v))) {
+      h = hh * 0.25;
+      rejected++;
+      if (Math.abs(hh) < 1e-14) return { t, y, event: false, accepted, rejected, steps, error: 'non-finite' };
+      continue;
+    }
+    if (st.errNorm <= 1 || Math.abs(hh) < 1e-13) {
+      const tNew = t + hh;
+      const yNew = st.y5;
+      accepted++;
+      if (onStep) onStep(tNew, yNew);
+      if (event) {
+        const eNew = event(tNew, yNew);
+        const crossed = (ePrev === 0) ? false : (eNew === 0 || (ePrev < 0) !== (eNew < 0));
+        if (crossed) {
+          const loc = localize(t, y, st.k1, tNew, yNew, st.k7);
+          return { t: loc.t, y: loc.y, event: true, accepted, rejected, steps };
+        }
+        ePrev = eNew;
+      }
+      t = tNew; y = yNew;
+      k1Cache = st.k7;   /* FSAL: next step's k1 at the accepted point */
+    } else {
+      rejected++;
+      /* rejection keeps (t, y): k1Cache stays valid for the retry */
+    }
+    const fac = st.errNorm > 0 ? Math.min(5, Math.max(0.2, 0.9 * Math.pow(st.errNorm, -0.2))) : 5;
+    h = hh * fac;
+    if (Math.abs(h) < 1e-15) h = dir * 1e-15;
+  }
+  return { t, y, event: false, accepted, rejected, steps };
+}
+
+/* --- 9. Thin-disk crossing localization ---------------------------------- */
+
+function localizeDiskEvent(p0, p1, innerRadius, outerRadius) {
+  const z0 = p0[2], z1 = p1[2];
+  if (Math.abs(z0 - z1) < 1e-15) {
+    if (Math.abs(z0) > 1e-9) return null;
+    for (const cand of [[p0, 0], [p1, 1]]) {
+      const radius = Math.hypot(cand[0][0], cand[0][1]);
+      if (radius >= innerRadius && radius <= outerRadius) {
+        return { position: [cand[0][0], cand[0][1], cand[0][2]], radius, s: cand[1] };
+      }
+    }
+    return null;
+  }
+  let s = z0 / (z0 - z1);
+  if (s < -1e-12 || s > 1 + 1e-12) return null;
+  s = Math.min(1, Math.max(0, s));
+  const position = [
+    p0[0] + (p1[0] - p0[0]) * s,
+    p0[1] + (p1[1] - p0[1]) * s,
+    0
+  ];
+  const radius = Math.hypot(position[0], position[1]);
+  if (radius < innerRadius || radius > outerRadius) return null;
+  return { position, radius, s };
+}
+
+/* --- 10. Emitter->observer redshift factor -------------------------------- */
+
+function redshiftFactor(photonCovariant, uObserver, uEmitter) {
+  let num = 0, den = 0;
+  for (let i = 0; i < 4; i++) {
+    num += photonCovariant[i] * uObserver[i];
+    den += photonCovariant[i] * uEmitter[i];
+  }
+  return num / den;
+}
+
+/* --- 11. Camera screen ray from a local orthonormal tetrad ---------------- */
+
+function screenRay(M, a, camera, pixel) {
+  const r = camera.r, theta = camera.theta, phi = camera.phi !== undefined ? camera.phi : 0;
+  const fov = camera.fov !== undefined ? camera.fov : 1.0;
+  const { S, D, A, st } = _kerrParts(M, a, r, theta);
+  const g = kerrMetricBL(M, a, r, theta);
+  // Locally non-rotating (LNRF / ZAMO) observer tetrad — orthonormal by
+  // construction, valid everywhere outside the outer horizon.
+  const omega = 2 * M * a * r / A;
+  const ut = Math.sqrt(A / (S * D)), up = omega * ut;      // u^t, u^phi
+  const eR = [0, Math.sqrt(Math.max(D / S, 0)), 0, 0];      // radial leg
+  const eTh = [0, 0, 1 / Math.sqrt(S), 0];                  // polar leg
+  const ePh = [0, 0, 0, 1 / Math.sqrt(Math.max(g[3][3], 1e-300))]; // azimuthal leg
+  // Screen basis: forward toward the hole, right along +phi, up toward -theta.
+  const half = Math.tan(fov / 2);
+  const sx = (pixel.x || 0) * half, sy = (pixel.y || 0) * half;
+  const norm = Math.sqrt(1 + sx * sx + sy * sy);
+  const k = [ut, 0, 0, up];
+  for (let i = 0; i < 4; i++) k[i] += (-eR[i] + sx * ePh[i] - sy * eTh[i]) / norm;
+  // Lower the index: p_mu = g_{mu nu} k^nu, then normalize so E = -p_t = 1.
+  const p = [0, 0, 0, 0];
+  for (let i = 0; i < 4; i++) {
+    let s = 0;
+    for (let j = 0; j < 4; j++) s += g[i][j] * k[j];
+    p[i] = s;
+  }
+  if (p[0] < 0) {
+    const sc = -1 / p[0];
+    for (let i = 0; i < 4; i++) p[i] *= sc;
+  }
+  return {
+    state: [0, r, theta, phi, p[0], p[1], p[2], p[3]],
+    origin: [0, r, theta, phi],
+    direction: k.slice(),
+    observerU: [ut, 0, 0, up]
+  };
+}
+
+/* --- 12. Deterministic exact tile cover ----------------------------------- */
+
+function tileOrder(width, height, tileSize) {
+  const w = Math.floor(width), hgt = Math.floor(height);
+  if (!Number.isFinite(w) || !Number.isFinite(hgt) || w <= 0 || hgt <= 0) return [];
+  const ts = Math.max(1, Math.floor(tileSize) || 1);
+  const out = [];
+  for (let y = 0; y < hgt; y += ts) {
+    for (let x = 0; x < w; x += ts) {
+      out.push({ x, y, w: Math.min(ts, w - x), h: Math.min(ts, hgt - y) });
+    }
+  }
+  return out;
+}
+
+const candidate = {
+  kerrMetricBL, inverse4, christoffel, constantsOfMotion, nullHamiltonian,
+  carterPotentials, geodesicRHS, rk45Event, localizeDiskEvent, redshiftFactor,
+  screenRay, tileOrder
+};
