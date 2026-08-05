@@ -1,0 +1,15 @@
+SHA-256 integrity receipt
+Independent calculation by OpenAI Codex
+
+original/index.orig.html
+  bytes: 14885
+  full_sha256: 5f4252f818ad954b102b2a6fe9f4941b443e6dac4808fce4c9a3fa82a3885304
+  frozen_harness_sha256: e9a2ccf043ac3982fd37b3a62db613796294116d4d284e98d681350f7c4d3ba6
+
+index.html with annotations, credits, and provenance
+  bytes: 49561
+  full_sha256: 85579b15b8643228076a78b400144952fb1fb98488fff7cf6a6ee9c4809b87cf
+  frozen_harness_sha256: e9a2ccf043ac3982fd37b3a62db613796294116d4d284e98d681350f7c4d3ba6
+
+The matching frozen_harness_sha256 values prove that the grader section after
+"// Frozen deterministic checks." remained byte-identical to the original.

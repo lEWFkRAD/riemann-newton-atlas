@@ -1,0 +1,11 @@
+{
+  "name": "riemann-newton-atlas-3d",
+  "private": true,
+  "description": "three.js companion for the Riemann-Newton Atlas (verification tooling only; atlas3d.html itself is dependency-free)",
+  "scripts": {
+    "verify": "node verify-companion.js"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.0.0"
+  }
+}
