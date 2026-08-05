@@ -29,3 +29,12 @@ Hermes reported the original implementation result and disclosed its known visua
 The 3D companion (`3d/`) was built later (2026-08-05) by Hermes Agent on the same verified numerical core and carries its own headless verification receipt ([`proofs/companion-3d.txt`](proofs/companion-3d.txt), re-runnable via `3d/verify-companion.js`). The frozen benchmark `index.html` was not modified.
 
 See [PROVENANCE.md](PROVENANCE.md) and the files under [`proofs/`](proofs/) for the timestamped evidence chain and reproducible receipts.
+
+## Kerr Light Cathedral
+
+- **Project direction and publication:** [@lEWFkRAD](https://github.com/lEWFkRAD)
+- **Primary numerical implementation, optimization, verification tooling, and live WebGL2 extension:** Hermes Agent using Qwen3.8 Max through Nous
+- **Benchmark design and independent numerical audit:** OpenAI Codex
+- **Visual inspection support:** Nous-hosted cloud vision
+
+The CPU page is retained as the adaptive accuracy reference. The animated GPU page is explicitly documented as a fixed-step RK4 approximation. Independent review confirmed the 100/100 frozen result and strong core accuracy while also documenting the CPU renderer's remaining disk-intersection approximation.

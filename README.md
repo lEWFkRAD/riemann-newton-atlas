@@ -1,4 +1,15 @@
-# Riemann–Newton Atlas
+# Science Stack
+
+A public collection of verified visual-mathematics experiments built by local AI agents, with reproducible numerical checks, provenance, and honest separation between reference solvers and real-time approximations.
+
+## Projects
+
+| Project | Field | Open it |
+|---|---|---|
+| **Riemann–Newton Atlas** | Complex dynamics, polynomial roots, Newton flow, fractal geometry | [`index.html`](index.html) · [`3d/atlas3d.html`](3d/atlas3d.html) |
+| **Kerr Light Cathedral** | Numerical relativity, null geodesics, gravitational lensing | [CPU reference + 100-point grader](kerr-light-cathedral/index.html) · [live WebGL2 edition](kerr-light-cathedral/cathedral-live.html) |
+
+## Riemann–Newton Atlas
 
 A dependency-free, single-file complex-dynamics laboratory completed by Hermes as an adversarial mathematical programming benchmark.
 
@@ -14,6 +25,16 @@ Download `index.html` and open it in a modern browser. The page includes:
 
 ![Completed degree-12 atlas](screenshot.png)
 
+## Kerr Light Cathedral
+
+The second Science Stack project ray-traces a spinning Kerr black hole from the metric itself.
+
+- The [CPU reference](kerr-light-cathedral/index.html) implements the Kerr metric, Hamiltonian null-geodesic flow, Carter invariants, adaptive Dormand–Prince integration, event handling, relativistic redshift, and a progressive per-pixel renderer. It earned **100/100** on the frozen grader plus **16/16** supplemental physics probes.
+- The [live WebGL2 edition](kerr-light-cathedral/cathedral-live.html) ports the flow to a fragment shader for animated camera orbit, Keplerian disk shear, Doppler beaming, gravitational redshift, and a lensed asymptotic star field. It is explicitly a fixed-step RK4 visualization; the CPU page remains the accuracy reference.
+- Source, verification scripts, engineering notes, known limitations, and image receipts are collected in [`kerr-light-cathedral/`](kerr-light-cathedral/README.md).
+
+![Kerr Light Cathedral full-resolution CPU receipt](kerr-light-cathedral/receipts/cathedral-render.png)
+
 ## 3D companion
 
 [`3d/atlas3d.html`](3d/atlas3d.html) renders the atlas math as an interactive
@@ -23,7 +44,7 @@ every basin re-solves live while you drag. Same verified numerical core,
 fully self-contained single file (math + three.js 0.180 inlined). Details,
 screenshots, and its own headless verification in [`3d/README.md`](3d/README.md).
 
-## Verified result
+## Atlas verified result
 
 - Visible benchmark: **100/100**
 - Supplemental stress suite: **48/48**
@@ -61,6 +82,8 @@ The interactive atlas classifies its dense pixel field with capped discrete Newt
 - Agent runtime, planning, tools, and file/browser orchestration: **Hermes Agent**
 - Benchmark design and independent verification: OpenAI Codex
 - Visual verification support: Nous-hosted cloud vision
+
+Kerr Light Cathedral follows the same attribution model: project direction and publication by @lEWFkRAD; mathematical implementation and GPU extension by Hermes Agent using Qwen3.8 Max; benchmark design and independent audit by OpenAI Codex; visual inspection support through Nous-hosted cloud vision.
 
 ## Proofs
 

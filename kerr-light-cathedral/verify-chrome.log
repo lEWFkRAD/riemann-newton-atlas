@@ -1,0 +1,15 @@
+  PASS  frozen grader byte-identical — sha256 match starter↔assembled
+  PASS  headless chrome attached — CDP page target
+  PASS  page boot — candidate + observatory live
+  PASS  visible grader in Chrome — score 100/100 — "Visible spacetime checks pass. Hidden invariants remain."
+  grader lines: Kerr metric limits10/10 | Metric inverse10/10 | Christoffel connection10/10 | Conserved quantities8/8 | Null Hamiltonian8/8 | Carter potentials10/10 | Hamiltonian flow10/10 | Adaptive RK45 event12/12 | Disk event localization7/7 | Relativistic redshift7/7 | Screen ray tetrad4/4 | Deterministic tile cover4/4
+  PASS  renderer completed — Rendered 168×112 in 1.9s — disk hits 10515, escaped 6975, captured 1326. Click the image to inspect a ray.
+  PASS  pixel census exact — 18816/18816 rays classified (disk 10515, escape 6975, capture 1326)
+  PASS  all three ray classes present — shadow 1326, disk 10515, stars 6975
+  PASS  image non-blank — mean=67.4 bright=3696 dark=4769
+  PASS  black-hole shadow present — 4769 near-black pixels
+  PASS  screenshot saved — verify-chrome.png (observatory scrolled into view)
+  PASS  canvas receipt saved — verify-chrome-canvas.png (raw 168×112 render)
+  PASS  no page exceptions — 0 console messages
+
+=== CHROME RESULT: ALL PASS ===

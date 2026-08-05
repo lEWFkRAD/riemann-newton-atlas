@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kerr Light Cathedral — Live 3D</title>
+<style>
+:root{color-scheme:dark;--bg:#05030a;--panel:#0b0812e8;--line:#3f2b55;--text:#fff6e8;--muted:#bcaec7;--gold:#ffca55;--ember:#ff6b35;--violet:#9b6cff;--cyan:#55e6ff}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 52% 10%,#21102c 0,#0a0711 38%,var(--bg) 75%);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,Segoe UI,sans-serif;min-height:100vh}
+.wrap{width:min(1100px,calc(100% - 32px));margin:auto;padding:26px 0 60px}
+.eyebrow{font:700 11px/1.2 ui-monospace,Consolas,monospace;letter-spacing:.24em;color:var(--gold);text-transform:uppercase}
+h1{font-size:clamp(30px,5vw,52px);line-height:.95;letter-spacing:-.05em;margin:12px 0 8px;background:linear-gradient(90deg,var(--gold),var(--ember) 42%,var(--violet) 82%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:#d9cedd;max-width:760px}
+.panel{border:1px solid #372a44;border-radius:18px;background:var(--panel);padding:18px;margin-top:16px;box-shadow:0 18px 60px #0005}
+#glwrap{position:relative}
+#gl{width:100%;display:block;border-radius:12px;background:#020108;cursor:grab;touch-action:none}
+#hud{position:absolute;top:10px;right:12px;padding:3px 10px;border-radius:999px;background:#05030acc;border:1px solid var(--line);font:11px ui-monospace,monospace;color:var(--cyan)}
+.row{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-top:12px;font-size:13px}
+.row label{color:var(--muted)}
+.row input[type=range]{accent-color:var(--gold);vertical-align:middle}
+.row output{font:12px ui-monospace,monospace;color:var(--gold);min-width:46px;display:inline-block}
+button,a.btn{border:0;border-radius:10px;background:linear-gradient(90deg,var(--gold),var(--ember),var(--violet));color:#100914;font-weight:800;padding:9px 14px;cursor:pointer;text-decoration:none;font-size:13px}
+.chk{display:flex;gap:6px;align-items:center;color:var(--text)}
+.footer{color:#85788e;text-align:center;font:12px ui-monospace,monospace;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">HERMES ADVERSARIAL SHOWCASE • RELATIVISTIC RAY TRACING • LIVE GPU PORT</div>
+  <h1>The Kerr Light Cathedral — Live</h1>
+  <p class="sub">Real-time Hamiltonian null-geodesic ray marching in a WebGL2 fragment shader. Every pixel integrates the Kerr metric on the GPU; the disk differentially rotates with Keplerian shear. Drag to orbit in full 3D, wheel to zoom, or let it fly itself.</p>
+
+  <section class="panel">
+    <div id="glwrap">
+      <canvas id="gl" width="960" height="540"></canvas>
+      <div id="hud">booting…</div>
+    </div>
+    <div class="row">
+      <label>spin a/M <input id="spin" type="range" min="-0.99" max="0.99" step="0.01" value="0.60"><output id="spinv">0.60</output></label>
+      <label>distance r/M <input id="dist" type="range" min="10" max="60" step="1" value="26"><output id="distv">26</output></label>
+      <label class="chk"><input id="auto" type="checkbox" checked> auto-orbit</label>
+      <label class="chk"><input id="diskanim" type="checkbox" checked> animate disk</label>
+      <button id="reset">Reset view</button>
+      <a class="btn" href="index.html">← accurate CPU version (100/100 grader)</a>
+    </div>
+  </section>
+  <div class="footer">GEODESICS: HAMILTONIAN FLOW ON KERR–BOYER–LINDQUIST • RK4 • NULL CONSTRAINT SOLVED ANALYTICALLY • DOPPLER g³ + GRAVITATIONAL REDSHIFT • STARFIELD AT ASYMPTOTIC DIRECTION</div>
+</div>
+
+<script>
+'use strict';
+const canvas = document.getElementById('gl');
+const hud = document.getElementById('hud');
+const gl = canvas.getContext('webgl2', { antialias: false, preserveDrawingBuffer: true });
+if (!gl) { hud.textContent = 'WebGL2 unavailable'; throw new Error('no webgl2'); }
+
+const FRAG = `#version 300 es
+precision highp float;
+out vec4 fragColor;
+uniform vec2 u_res;
+uniform float u_time;
+uniform float u_spin;
+uniform vec3 u_camBL;      // (r, theta, phi)
+uniform vec3 u_camFwd, u_camRight, u_camUp;
+uniform float u_fov;
+uniform float u_animDisk;
+uniform float u_rph;
+
+#define DISK_IN 6.0
+#define DISK_OUT 18.0
+#define ESCAPE 100.0
+#define MAX_STEPS 220
+
+float hash11(float n){ return fract(sin(n)*43758.5453123); }
+
+/* dx/dlambda and dp/dlambda for Kerr-BL Hamiltonian flow (M=1) */
+void deriv(vec4 pos, vec4 mom, out vec4 dpos, out vec4 dmom){
+  float r = pos.y, th = pos.z, a = u_spin;
+  float ct = cos(th), st = sin(th);
+  float c2 = ct*ct, s2 = max(st*st, 1e-12);
+  float S = r*r + a*a*c2;
+  float D = r*r - 2.0*r + a*a;
+  float A = (r*r+a*a)*(r*r+a*a) - D*a*a*s2;
+  float SD = S*D, S2 = S*S, D2 = D*D;
+  float itt = -A/SD, itphi = -2.0*a*r/SD;
+  float irr = D/S, ithth = 1.0/S;
+  float ipp = (D - a*a*s2)/(SD*s2);
+  vec4 xd = vec4(itt*mom.x + itphi*mom.w, irr*mom.y, ithth*mom.z, itphi*mom.x + ipp*mom.w);
+  float dSdth = -2.0*a*a*st*ct;
+  float dDdr = 2.0*r - 2.0;
+  float dAdr = 4.0*r*(r*r+a*a) - a*a*s2*dDdr;
+  float dAdth = -D*a*a*2.0*st*ct;
+  float dtt_dr = 2.0*(a*a*c2 - r*r)/S2;
+  float dtphi_dr = 2.0*a*s2*(r*r - a*a*c2)/S2;
+  float drr_dr = (2.0*r*D - S*dDdr)/D2;
+  float dthth_dr = 2.0*r;
+  float dpp_dr = s2*(dAdr*S - A*2.0*r)/S2;
+  float dtt_dth = 4.0*r*a*a*st*ct/S2;
+  float dtphi_dth = -2.0*a*r*(2.0*st*ct*S - s2*dSdth)/S2;
+  float drr_dth = dSdth/D;
+  float dthth_dth = dSdth;
+  float dpp_dth = 2.0*st*ct*A/S + s2*(dAdth*S - A*dSdth)/S2;
+  float qr = dtt_dr*xd.x*xd.x + 2.0*dtphi_dr*xd.x*xd.w + drr_dr*xd.y*xd.y + dthth_dr*xd.z*xd.z + dpp_dr*xd.w*xd.w;
+  float qth = dtt_dth*xd.x*xd.x + 2.0*dtphi_dth*xd.x*xd.w + drr_dth*xd.y*xd.y + dthth_dth*xd.z*xd.z + dpp_dth*xd.w*xd.w;
+  dpos = xd;
+  dmom = vec4(0.0, 0.5*qr, 0.5*qth, 0.0);
+}
+
+void rk4(vec4 pos, vec4 mom, float h, inout vec4 p2, inout vec4 m2){
+  vec4 dp1,dm1,dp2,dm2,dp3,dm3,dp4,dm4;
+  deriv(pos, mom, dp1, dm1);
+  deriv(pos+0.5*h*dp1, mom+0.5*h*dm1, dp2, dm2);
+  deriv(pos+0.5*h*dp2, mom+0.5*h*dm2, dp3, dm3);
+  deriv(pos+h*dp3, mom+h*dm3, dp4, dm4);
+  p2 = pos + (h/6.0)*(dp1+2.0*dp2+2.0*dp3+dp4);
+  m2 = mom + (h/6.0)*(dm1+2.0*dm2+2.0*dm3+dm4);
+}
+
+vec3 starfield(vec3 dir){
+  float th = acos(clamp(dir.z,-1.0,1.0));
+  float ph = atan(dir.y, dir.x);
+  vec3 col = vec3(0.0);
+  float mw = exp(-pow(sin(th-1.35),2.0)/0.08);
+  col += vec3(0.045,0.06,0.13)*mw;
+  for(int oct=1; oct<=3; oct++){
+    float sc = float(oct)*9.0;
+    vec2 grid = vec2(ph,th)*sc;
+    vec2 id0 = floor(grid);
+    for(int dx=-1; dx<=1; dx++) for(int dy=-1; dy<=1; dy++){
+      vec2 cell = id0 + vec2(float(dx),float(dy));
+      float h = hash11(cell.x*73856.093 + cell.y*19349.663 + float(oct)*123.45);
+      if(h < 0.82) continue;
+      vec2 spos = cell + vec2(hash11(h*7.13), hash11(h*3.71));
+      float dd = length(grid - spos);
+      float size = 0.05 + 0.10*hash11(h+1.0);
+      float tw = 0.9 + 0.1*sin(u_time*3.0 + h*50.0);
+      float inten = exp(-(dd*dd)/(size*size))*(0.5+0.9*hash11(h+2.0))*tw;
+      float tcol = hash11(h+3.0);
+      if(tcol<0.4) col += vec3(0.32,0.42,0.75)*inten;
+      else if(tcol<0.75) col += vec3(0.72,0.66,0.5)*inten;
+      else col += vec3(0.8,0.45,0.3)*inten;
+    }
+  }
+  return col*0.75;
+}
+
+/* thin-disk shading: blackbody tint x Doppler/grav beaming, animated hot spots */
+vec3 diskColor(float r, float phi, float g, float a){
+  float T = pow(6.0/r, 0.75);
+  float beam = g*g*g;
+  vec3 col = vec3(0.9*T, 0.75*T*T, 0.55*T*T*T)*(0.6 + 0.6*min(beam,3.0));
+  if(g>1.0){ col.b *= min(g*g,2.2); col.g *= min(g,1.5); }
+  else { col.r *= min(1.0/max(g,0.4),2.0); col.b *= max(g*g,0.15); }
+  /* Keplerian hot-spot streaks, differentially advected */
+  float Omega = 1.0/(pow(r,1.5)+a);
+  float phiAdv = phi - Omega*u_time*u_animDisk;
+  float streak = hash11(floor(phiAdv*7.0 + r*3.0)) * (0.55+0.45*sin(phiAdv*14.0 + r*5.0));
+  float radial = smoothstep(DISK_IN, DISK_IN+1.2, r)*smoothstep(DISK_OUT, DISK_OUT-2.5, r);
+  return col*beam*radial*(0.55+0.75*streak)*1.35;
+}
+
+void main(){
+  vec2 uv = (2.0*gl_FragCoord.xy - u_res)/u_res.y;
+  vec3 dirW = normalize(u_camFwd + tan(u_fov)*(uv.x*u_camRight + uv.y*u_camUp));
+
+  /* camera BL frame */
+  float r0 = u_camBL.x, th0 = u_camBL.y, ph0 = u_camBL.z, a = u_spin;
+  vec3 er  = vec3(sin(th0)*cos(ph0), sin(th0)*sin(ph0), cos(th0));
+  vec3 eth = vec3(cos(th0)*cos(ph0), cos(th0)*sin(ph0), -sin(th0));
+  vec3 eph = vec3(-sin(ph0), cos(ph0), 0.0);
+  float drd = dot(dirW, er), dthd = dot(dirW, eth), dphd = dot(dirW, eph);
+  float st0 = max(sin(th0), 1e-6);
+
+  /* contravariant spatial velocity, then solve null constraint for xdot^t */
+  float ct0 = cos(th0);
+  float S0 = r0*r0 + a*a*ct0*ct0;
+  float D0 = r0*r0 - 2.0*r0 + a*a;
+  float A0 = (r0*r0+a*a)*(r0*r0+a*a) - D0*a*a*st0*st0;
+  float gtt = -(1.0 - 2.0*r0/S0);
+  float gtphi = -2.0*a*r0*st0*st0/S0;
+  float grr = S0/D0, gthth = S0;
+  float gpp = A0*st0*st0/S0;
+  float x1 = drd, x2 = dthd/r0, x3 = dphd/(r0*st0);
+  float Q = grr*x1*x1 + gthth*x2*x2 + gpp*x3*x3;
+  float disc = gtphi*gtphi*x3*x3 - gtt*Q;
+  if(disc < 0.0){ fragColor = vec4(0,0,0,1); return; }
+  float x0 = (-gtphi*x3 - sqrt(disc))/gtt;   /* future-directed */
+  vec4 pos = vec4(0.0, r0, th0, ph0);
+  vec4 mom = vec4(gtt*x0 + gtphi*x3, grr*x1, gthth*x2, gpp*x3 + gtphi*x0);
+
+  float rp = 1.0 + sqrt(max(1.0 - a*a, 0.0));
+  float minR = r0;
+  vec3 col = vec3(0.0);
+  bool captured = false, hit = false;
+  vec4 prevPos = pos; vec4 prevMom = mom;
+  float prevA = pos.z - 1.5707963267948966;
+
+  for(int i=0; i<MAX_STEPS; i++){
+    float r = pos.y;
+    float h = clamp(0.03*r, 0.02, 0.35);
+    if(abs(r-3.0)<1.2) h *= 0.5;
+    vec4 newPos = pos, newMom = mom;
+    rk4(pos, mom, h, newPos, newMom);
+    if(any(isnan(newPos)) || newPos.y < rp*1.001){ captured = true; break; }
+    minR = min(minR, newPos.y);
+    /* thin-disk equatorial crossing inside the annulus */
+    float newA = newPos.z - 1.5707963267948966;
+    if(prevA*newA < 0.0 && newPos.y > DISK_IN && newPos.y < DISK_OUT){
+      float frac = abs(prevA)/(abs(prevA)+abs(newA));
+      vec4 hp = mix(prevPos, newPos, frac);
+      vec4 hm = mix(prevMom, newMom, frac);
+      /* emitter Keplerian 4-velocity; exact g = (p.u_obs)/(p.u_em) */
+      float rr = hp.y;
+      float cth = cos(hp.z), sth = max(sin(hp.z),1e-6);
+      float Sh = rr*rr + a*a*cth*cth;
+      float Dh = rr*rr - 2.0*rr + a*a;
+      float Ah = (rr*rr+a*a)*(rr*rr+a*a) - Dh*a*a*sth*sth;
+      float gttH = -(1.0-2.0*rr/Sh), gtphiH = -2.0*a*rr*sth*sth/Sh, gppH = Ah*sth*sth/Sh;
+      float Om = 1.0/(pow(rr,1.5)+a);
+      float Aq = gttH + 2.0*gtphiH*Om + gppH*Om*Om;
+      float utE = Aq < 0.0 ? 1.0/sqrt(-Aq) : 1.0;
+      float utO = 1.0/sqrt(-gtt);  /* static observer at camera (r0 > ergosphere) */
+      float g = (hm.x*utO)/(utE*(hm.x + Om*hm.w));
+      g = clamp(g, 0.05, 4.0);
+      col = diskColor(rr, hp.w, g, a);
+      hit = true;
+      break;
+    }
+    if(newPos.y > ESCAPE){
+      vec4 dpos; vec4 dmom;
+      deriv(newPos, newMom, dpos, dmom);
+      float r = newPos.y, th = newPos.z, ph = newPos.w;
+      float st = sin(th), ct = cos(th), sp = sin(ph), cp = cos(ph);
+      vec3 v = vec3(
+        dpos.y*st*cp + r*(dpos.z*ct*cp - dpos.w*st*sp),
+        dpos.y*st*sp + r*(dpos.z*ct*sp + dpos.w*st*cp),
+        dpos.y*ct - r*dpos.z*st);
+      col = starfield(normalize(v));
+      float dn = abs(minR - u_rph);
+      if(dn < 0.9){
+        float glow = 0.5*exp(-(dn*dn)/0.045);
+        col += vec3(glow, glow*0.82, glow*0.45);
+      }
+      break;
+    }
+    prevPos = pos; prevMom = mom; prevA = newA;
+    pos = newPos; mom = newMom;
+  }
+
+  col = col/(col + vec3(1.0));         /* Reinhard */
+  col = pow(col, vec3(1.0/2.2));       /* gamma */
+  fragColor = vec4(col, 1.0);
+}`;
+
+const VERT = `#version 300 es
+void main(){ const vec2 p[4]=vec2[4](vec2(-1,-1),vec2(1,-1),vec2(-1,1),vec2(1,1)); gl_Position=vec4(p[gl_VertexID],0,1); }`;
+
+function compile(type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+gl.linkProgram(prog);
+if(!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+
+const U = {};
+for(const n of ['u_res','u_time','u_spin','u_camBL','u_camFwd','u_camRight','u_camUp','u_fov','u_animDisk','u_rph'])
+  U[n] = gl.getUniformLocation(prog, n);
+
+/* ---------------- orbit camera (true 3D) ---------------- */
+const view = { yaw: 0.35, pitch: 0.32, dist: 26 };
+const spinCtl = document.getElementById('spin'), distCtl = document.getElementById('dist');
+const spinV = document.getElementById('spinv'), distV = document.getElementById('distv');
+const autoChk = document.getElementById('auto'), diskChk = document.getElementById('diskanim');
+spinCtl.oninput = () => spinV.textContent = spinCtl.value;
+distCtl.oninput = () => { distV.textContent = distCtl.value; view.dist = +distCtl.value; };
+document.getElementById('reset').onclick = () => { view.yaw = 0.35; view.pitch = 0.32; view.dist = 26; distCtl.value = 26; distV.textContent = '26'; };
+
+let dragging = false, lx = 0, ly = 0;
+canvas.addEventListener('pointerdown', e => { dragging = true; lx = e.clientX; ly = e.clientY; canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; });
+canvas.addEventListener('pointermove', e => {
+  if(!dragging) return;
+  view.yaw += (e.clientX - lx) * 0.006;
+  view.pitch = Math.min(1.45, Math.max(-1.45, view.pitch + (e.clientY - ly) * 0.006));
+  lx = e.clientX; ly = e.clientY;
+});
+canvas.addEventListener('pointerup', e => { dragging = false; canvas.style.cursor = 'grab'; canvas.releasePointerCapture(e.pointerId); });
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  view.dist = Math.min(60, Math.max(10, view.dist * (e.deltaY > 0 ? 1.08 : 0.93)));
+  distCtl.value = Math.round(view.dist); distV.textContent = distCtl.value;
+}, { passive: false });
+
+const vnorm = v => { const n = Math.hypot(v[0],v[1],v[2]) || 1; return [v[0]/n, v[1]/n, v[2]/n]; };
+const vcross = (a,b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+
+/* ---------------- render loop ---------------- */
+let frames = 0, fpsT = performance.now(), fps = 0;
+const t0 = performance.now();
+function frame(){
+  if(autoChk.checked && !dragging) view.yaw += 0.0022;
+  const a = +spinCtl.value;
+  const th = Math.PI/2 - view.pitch;
+  const ph = view.yaw, r = view.dist;
+  const camXYZ = [r*Math.sin(th)*Math.cos(ph), r*Math.sin(th)*Math.sin(ph), r*Math.cos(th)];
+  const fwd = vnorm([-camXYZ[0], -camXYZ[1], -camXYZ[2]]);
+  const right = vnorm(vcross([0,0,1], fwd));
+  const up = vcross(fwd, right);
+  const rph = 2*(1 + Math.cos((2/3)*Math.acos(-Math.min(1, Math.max(-1, a)))));
+
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.uniform2f(U.u_res, canvas.width, canvas.height);
+  gl.uniform1f(U.u_time, diskChk.checked ? (performance.now() - t0)/1000 : 0);
+  gl.uniform1f(U.u_spin, a);
+  gl.uniform3f(U.u_camBL, r, th, ph);
+  gl.uniform3fv(U.u_camFwd, fwd);
+  gl.uniform3fv(U.u_camRight, right);
+  gl.uniform3fv(U.u_camUp, up);
+  gl.uniform1f(U.u_fov, 0.62);
+  gl.uniform1f(U.u_animDisk, diskChk.checked ? 1 : 0);
+  gl.uniform1f(U.u_rph, rph);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  frames++;
+  const now = performance.now();
+  if(now - fpsT > 1000){ fps = Math.round(frames*1000/(now-fpsT)); frames = 0; fpsT = now;
+    hud.textContent = `${fps} fps • a=${a.toFixed(2)} • r=${r.toFixed(0)}M • drag/zoom/orbit`; }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* headless hook */
+window.__live = { canvas, gl, frames: () => frames, fps: () => fps };
+</script>
+</body>
+</html>

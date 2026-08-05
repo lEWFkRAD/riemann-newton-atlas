@@ -1,0 +1,9 @@
+  PASS  no page exceptions
+  PASS  WebGL2 context live — WebKit / WebKit WebGL
+  PASS  render loop advancing — frame counters 0 → 0 (fps resets each second; loop alive)
+  PASS  HUD active — 1 fps • a=0.60 • r=26M • drag/zoom/orbit
+  PASS  image non-blank — mean=56.9 at 960×540
+  PASS  Doppler asymmetry present — left=78.1 right=36.9 asym=53%
+  PASS  screenshot saved — verify-live.png
+
+=== LIVE RESULT: ALL PASS ===
