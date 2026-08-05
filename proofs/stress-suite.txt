@@ -1,0 +1,11 @@
+Independent rerun by OpenAI Codex
+Date: 2026-08-04 America/New_York
+
+STRESS: 48 pass, 0 fail
+
+The retained stress source exercises degrees 3-12, coefficient scaling,
+root multiplicity, deterministic call order, RK45 edge behavior, entropy,
+box dimension, and marching-squares boundary cases.
+
+Reproduce with:
+  node verification/stress.js

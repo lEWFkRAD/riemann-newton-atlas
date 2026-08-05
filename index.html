@@ -86,6 +86,11 @@
     #candidate-atlas .atlas-note b{display:block;color:#dceaff;margin-bottom:4px}
     #candidate-atlas .atlas-credits{margin-top:14px;padding-top:12px;border-top:1px solid #1f3155;color:#7185a8;font:11px/1.6 ui-monospace,monospace}
     #candidate-atlas .atlas-credits b{color:#a9bfe3}
+    #candidate-atlas .atlas-provenance{margin-top:10px;border:1px solid #1f3155;border-radius:8px;background:#050916;color:#8fa3c8;font:11px/1.6 ui-monospace,monospace}
+    #candidate-atlas .atlas-provenance summary{cursor:pointer;padding:9px 11px;color:#bfe3ff}
+    #candidate-atlas .atlas-provenance ol{margin:0;padding:0 28px 11px 40px}
+    #candidate-atlas .atlas-proof{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+    #candidate-atlas .atlas-proof span{border:1px solid #284064;border-radius:999px;padding:4px 8px;color:#a9d9ef}
     @media(max-width:800px){#candidate-atlas .atlas-editor{grid-template-columns:1fr}#candidate-atlas .atlas-annotations{grid-template-columns:1fr 1fr}}
     @media(max-width:480px){#candidate-atlas .atlas-annotations{grid-template-columns:1fr}}
   </style>
@@ -122,8 +127,21 @@
   </aside>
   <div class="atlas-status" id="atlas-status" role="status" aria-live="polite">warming up…</div>
   <div class="atlas-credits" aria-label="Project credits">
-    <b>Credits:</b> project direction and publication — @lEWFkRAD · benchmark design and independent verification — OpenAI Codex · numerical implementation and interactive atlas — Hermes Agent · visual verification support — Nous-hosted cloud vision
+    <b>Built by:</b> Qwen3.8 Max (reasoning and code generation) operating through Hermes Agent (planning, tools, files, and browser orchestration) · project direction — @lEWFkRAD · benchmark design and independent verification — OpenAI Codex · visual verification support — Nous-hosted cloud vision
+    <div class="atlas-proof" aria-label="Verification proofs"><span>visible harness 100/100</span><span>stress suite 48/48</span><span>frozen harness SHA-256 matched</span><span>0 console errors reported</span></div>
   </div>
+  <details class="atlas-provenance">
+    <summary>Build timeline and proof summary</summary>
+    <ol>
+      <li>20:55 — Hermes/Qwen opened and read the benchmark.</li>
+      <li>21:49 — original backed up before the first implementation write.</li>
+      <li>21:55 — numerical core and Node harness written.</li>
+      <li>22:03 — progressive interactive atlas assembled.</li>
+      <li>22:10 — engineering note and 48-case stress suite completed.</li>
+      <li>22:14 — final 46,371-byte artifact and browser screenshot produced.</li>
+      <li>22:18 — Codex independently reran 100/100 and 48/48 and matched the frozen harness hash.</li>
+    </ol>
+  </details>
   <script>
 (()=>{
 'use strict';

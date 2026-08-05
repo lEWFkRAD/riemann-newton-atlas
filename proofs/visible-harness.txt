@@ -1,0 +1,19 @@
+Independent rerun by OpenAI Codex
+Date: 2026-08-04 America/New_York
+
+PASS  complex arithmetic           10/10
+PASS  Horner derivative            10/10
+PASS  roots: unity degree 7        12/12
+PASS  roots: complex coefficients  12/12
+PASS  roots: near cluster          12/12
+PASS  RK45 convergence             12/12
+PASS  RK45 rejection path           8/8
+PASS  normalized entropy            8/8
+PASS  box dimension                 8/8
+PASS  marching squares              8/8
+
+TOTAL 100/100
+
+RK45 convergence endpoint: {"z":{"re":1,"im":0},"t":18.06701141516809}
+RK45 convergence steps: accepted 81, rejected 0, reason root
+RK45 rejection case: accepted 2923, rejected 2518, reason tMax
