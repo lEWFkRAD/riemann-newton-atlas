@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hermes Crucible — The Riemann–Newton Atlas</title>
+  <style>
+    :root{--bg:#050711;--panel:#0b1020;--ink:#eaf2ff;--muted:#91a0bd;--cyan:#45f3ff;--violet:#9f6cff;--pink:#ff4da8;--gold:#ffd166;--green:#45f0a8;--red:#ff5876;--line:#22304f}
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 15% -10%,#182454 0,transparent 33%),radial-gradient(circle at 90% 10%,#351545 0,transparent 29%),var(--bg);color:var(--ink);font:15px/1.55 Inter,ui-sans-serif,system-ui,sans-serif;min-height:100vh}
+    .shell{width:min(1180px,calc(100% - 32px));margin:auto;padding:42px 0 80px}.hero{position:relative;overflow:hidden;border:1px solid #30426b;background:linear-gradient(135deg,rgba(12,19,42,.94),rgba(8,9,23,.9));border-radius:24px;padding:clamp(26px,5vw,64px);box-shadow:0 26px 90px #0008}
+    #field{position:absolute;inset:0;width:100%;height:100%;opacity:.58}.hero-copy{position:relative;z-index:1;max-width:760px}.eyebrow{color:var(--cyan);font:700 12px/1 monospace;letter-spacing:.18em;text-transform:uppercase}.hero h1{font-size:clamp(38px,7vw,78px);line-height:.94;letter-spacing:-.055em;margin:18px 0}.hero h1 span{background:linear-gradient(90deg,var(--cyan),#b79cff 46%,var(--pink));color:transparent;background-clip:text}.lede{max-width:650px;color:#becbea;font-size:18px}.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}.chip{padding:7px 10px;border:1px solid #3d527d;border-radius:999px;background:#0b1429aa;color:#cce0ff;font:12px monospace}
+    .grid{display:grid;grid-template-columns:1.35fr .65fr;gap:18px;margin-top:18px}.card{border:1px solid var(--line);background:linear-gradient(160deg,#0b1121ee,#080b16ee);border-radius:18px;padding:24px;box-shadow:0 14px 44px #0005}.card h2{font-size:18px;margin:0 0 14px}.card h3{font-size:14px;color:#cfe1ff;margin:22px 0 8px}.muted{color:var(--muted)} code{color:#85f7ff;background:#0f1930;padding:2px 5px;border-radius:5px} ol{padding-left:22px}li{margin:7px 0}.score{font:700 46px/1 monospace;color:var(--gold)}.bar{height:9px;background:#161d32;border-radius:9px;overflow:hidden;margin:16px 0}.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--violet),var(--pink));transition:width .5s}.tests{display:grid;gap:8px;margin:15px 0}.test{display:flex;align-items:center;gap:9px;color:#a5b1c9;font:12px monospace}.dot{width:9px;height:9px;border-radius:50%;background:#43506b;box-shadow:0 0 0 3px #1d263d}.test.pass{color:#bafbe0}.test.pass .dot{background:var(--green);box-shadow:0 0 12px var(--green)}.test.fail{color:#ffb6c3}.test.fail .dot{background:var(--red)}button{border:0;border-radius:10px;padding:11px 15px;background:linear-gradient(90deg,#6aefff,#9b7cff);color:#07101d;font-weight:800;cursor:pointer}button:hover{filter:brightness(1.1)}button:disabled{opacity:.5;cursor:wait}.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px}.rule-num{color:var(--violet);font:700 24px monospace}.prompt{white-space:pre-wrap;background:#050916;border:1px solid #1f3155;color:#c8d8f5;border-radius:12px;padding:16px;font:12px/1.65 ui-monospace,monospace;max-height:380px;overflow:auto}.footer{text-align:center;color:#657493;margin-top:28px;font:12px monospace}
+    @media(max-width:800px){.grid,.rules{grid-template-columns:1fr}.hero{padding:28px 22px}.shell{width:min(100% - 18px,1180px)}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <section class="hero">
+    <canvas id="field" aria-hidden="true"></canvas>
+    <div class="hero-copy">
+      <div class="eyebrow">Hermes adversarial benchmark · zero accounting</div>
+      <h1>The Riemann–<span>Newton Atlas</span></h1>
+      <p class="lede">Complete a numerically stable complex-dynamics engine, make its geometry explorable, and prove it correct. One HTML file. No libraries. No server. No excuses.</p>
+      <div class="chips"><span class="chip">complex analysis</span><span class="chip">adaptive ODEs</span><span class="chip">root finding</span><span class="chip">fractal geometry</span><span class="chip">progressive rendering</span></div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Mission</h2>
+      <p class="muted">Edit only the <code>CANDIDATE IMPLEMENTATION</code> block near the bottom of this file. Turn the locked atlas into an interactive Newton-flow laboratory for arbitrary complex polynomials of degree 3–12.</p>
+      <ol>
+        <li>Implement immutable complex arithmetic and simultaneous root solving with Aberth–Ehrlich updates.</li>
+        <li>Implement Dormand–Prince RK45 integration for <code>dz/dt = -p(z)/p′(z)</code>, including rejection, adaptive step size, singularity guards, and dense path output.</li>
+        <li>Classify Newton-flow basins on a pixel grid and compute normalized Shannon entropy plus a two-scale box-count estimate of boundary dimension.</li>
+        <li>Extract the basin boundary with an ambiguity-safe marching-squares implementation.</li>
+        <li>Build the missing interactive atlas: polynomial editor, pan/zoom, hover inspection, root dragging, progressive tiles, cancellation, keyboard navigation, and PNG export.</li>
+      </ol>
+      <h3>Numerical contract</h3>
+      <p class="muted">All public functions must be deterministic, finite for finite valid inputs, non-mutating, and accurate within the tolerances encoded below. Repeated and near-repeated roots are mandatory. UI work does not compensate for failed math.</p>
+      <h3>Forbidden shortcuts</h3>
+      <p class="muted">No external packages, network calls, copied raster fractals, hard-coded fixture outputs, blocking full-frame render, <code>eval</code>, or global error suppression. The final file must remain under 300 KB.</p>
+    </section>
+
+    <aside class="card">
+      <h2>Crucible score</h2>
+      <div><span class="score" id="score">0</span><span class="muted"> / 100</span></div>
+      <div class="bar"><i id="scoreBar"></i></div>
+      <div class="tests" id="tests"></div>
+      <button id="run">Run deterministic checks</button>
+      <p class="muted" id="verdict">Starter state: the numerical core is intentionally incomplete.</p>
+    </aside>
+  </div>
+
+  <section class="rules">
+    <div class="card"><div class="rule-num">01</div><h2>Correctness gate</h2><p class="muted">At least 9/10 visible checks, plus every hidden invariant. Returning fixture-shaped constants is an automatic zero.</p></div>
+    <div class="card"><div class="rule-num">02</div><h2>Performance gate</h2><p class="muted">A 700×700 atlas must stay responsive, render progressively, and cancel stale work after an input change.</p></div>
+    <div class="card"><div class="rule-num">03</div><h2>Explanation gate</h2><p class="muted">Submit a concise engineering note explaining stability choices, complexity, accessibility, and one limitation.</p></div>
+  </section>
+
+  <section class="card" style="margin-top:18px">
+    <h2>Copy/paste instruction for Hermes</h2>
+    <div class="prompt" id="prompt">You are being evaluated on advanced mathematical programming and visual UI engineering. Open the supplied index.html. Read the entire benchmark before editing. You may modify only the block marked “CANDIDATE IMPLEMENTATION” and may add UI markup/styles only inside the marked “CANDIDATE ATLAS” container. Implement the required numerical functions and the interactive atlas. Do not alter, delete, bypass, monkey-patch, or special-case the test harness. Run the deterministic checks in a browser and leave the page in a working state. Your submission is the edited index.html plus a short NOTES.md covering numerical stability, time/space complexity, accessibility, and one known limitation. Passing the visible checks is necessary but not sufficient: hidden tests change polynomial degree, coefficient scale, root multiplicity, viewport, and call order.</div>
+  </section>
+
+  <section id="candidate-atlas" class="card" style="margin-top:18px" aria-label="Candidate atlas output">
+    <h2>Candidate atlas</h2>
+    <p class="muted">Hermes must replace this locked state with the finished interactive mathematical instrument.</p>
+  </section>
+  <div class="footer">BENCHMARK ID RN-ATLAS-12 · deterministic seed 0x48E24A91</div>
+</main>
+
+<script>
+// Decorative field; independent of the candidate implementation.
+(()=>{const c=document.querySelector('#field'),x=c.getContext('2d');let w,h,d=1,t=0;function size(){const r=c.getBoundingClientRect();d=Math.min(devicePixelRatio||1,2);c.width=w=r.width*d;c.height=h=r.height*d}function draw(){t+=.004;x.clearRect(0,0,w,h);x.globalCompositeOperation='lighter';for(let k=0;k<70;k++){const a=k*2.399+t*(1+(k%7)/9),r=(18+k*5)*d*(.9+.1*Math.sin(t*3+k)),px=w*.78+Math.cos(a)*r,py=h*.48+Math.sin(a*1.7)*r*.43;x.fillStyle=`hsla(${180+(k*7+t*900)%150},95%,65%,${.06+(k%5)*.012})`;x.beginPath();x.arc(px,py,(2+k%4)*d,0,7);x.fill()}requestAnimationFrame(draw)}addEventListener('resize',size);size();draw()})();
+
+/* ================================================================
+   CANDIDATE IMPLEMENTATION — HERMES MAY EDIT THIS BLOCK ONLY
+   Every complex number is a plain object { re:Number, im:Number }.
+   ================================================================ */
+const candidate = {
+  // Return z + w, z - w, z*w, z/w, |z| respectively. Never mutate inputs.
+  add(z,w){ throw new Error('TODO'); },
+  sub(z,w){ throw new Error('TODO'); },
+  mul(z,w){ throw new Error('TODO'); },
+  div(z,w){ throw new Error('TODO'); },
+  abs(z){ throw new Error('TODO'); },
+
+  // coeffs are highest power first. Return { value, derivative } using one
+  // stable Horner pass. Coefficients and z are complex objects.
+  polyAndDerivative(coeffs,z){ throw new Error('TODO'); },
+
+  // Find all roots simultaneously. Return Complex[]. Required options:
+  // tolerance, maxIterations. Handle degree 3..12 and clustered roots.
+  aberth(coeffs,options={}){ throw new Error('TODO'); },
+
+  // Integrate Newton flow dz/dt=-p/p' with adaptive Dormand–Prince 5(4).
+  // Return { points:[{z,t}], accepted, rejected, reason }.
+  // reason is one of: 'root','tMax','singular','stepUnderflow'.
+  rk45NewtonFlow(coeffs,z0,options={}){ throw new Error('TODO'); },
+
+  // grid is {width,height,labels:Int32Array}; -1 means unclassified.
+  // Return normalized entropy in [0,1], excluding -1 cells.
+  basinEntropy(grid){ throw new Error('TODO'); },
+
+  // Estimate boundary box-count dimension from occupied boxes at sizes
+  // supplied in options.sizes (default [2,4,8,16]). Return {dimension,counts}.
+  boxDimension(grid,options={}){ throw new Error('TODO'); },
+
+  // Return line segments [[[x1,y1],[x2,y2]],...] along label changes.
+  // Resolve saddle ambiguity deterministically; no NaN or duplicate segments.
+  marchingSquares(grid){ throw new Error('TODO'); }
+};
+/* ================= END CANDIDATE IMPLEMENTATION ================= */
+
+// Frozen deterministic checks. Do not edit this section.
+(()=>{
+  const $=s=>document.querySelector(s), testsEl=$('#tests'), run=$('#run');
+  const close=(a,b,e=1e-9)=>Number.isFinite(a)&&Math.abs(a-b)<=e;
+  const cclose=(a,b,e=1e-8)=>a&&close(a.re,b.re,e)&&close(a.im,b.im,e);
+  const polyFromRoots=roots=>roots.reduce((cs,r)=>{const out=Array(cs.length+1).fill(0).map(()=>({re:0,im:0}));cs.forEach((v,i)=>{out[i]=candidate.add(out[i],v);out[i+1]=candidate.sub(out[i+1],candidate.mul(v,r))});return out},[{re:1,im:0}]);
+  const checks=[
+    ['complex arithmetic',10,()=>cclose(candidate.div(candidate.mul({re:3,im:-4},{re:-2,im:5}),{re:-2,im:5}),{re:3,im:-4},1e-10)],
+    ['Horner derivative',10,()=>{const q=candidate.polyAndDerivative([{re:1,im:0},{re:0,im:0},{re:-1,im:0}],{re:2,im:1});return cclose(q.value,{re:2,im:4})&&cclose(q.derivative,{re:4,im:2})}],
+    ['roots: unity degree 7',12,()=>{const cs=[{re:1,im:0},...Array(6).fill(0).map(()=>({re:0,im:0})),{re:-1,im:0}],rs=candidate.aberth(cs,{tolerance:1e-11,maxIterations:700});return rs.length===7&&rs.every(r=>candidate.abs(candidate.polyAndDerivative(cs,r).value)<1e-7)}],
+    ['roots: complex coefficients',12,()=>{const roots=[{re:1,im:2},{re:-.5,im:.2},{re:2,im:-1}],cs=polyFromRoots(roots),rs=candidate.aberth(cs,{tolerance:1e-11,maxIterations:600});return roots.every(a=>rs.some(b=>candidate.abs(candidate.sub(a,b))<1e-6))}],
+    ['roots: near cluster',12,()=>{const roots=[{re:1,im:0},{re:1.0002,im:.0001},{re:-2,im:0}],cs=polyFromRoots(roots),rs=candidate.aberth(cs,{tolerance:1e-12,maxIterations:1400});return roots.every(a=>rs.some(b=>candidate.abs(candidate.sub(a,b))<8e-5))}],
+    ['RK45 convergence',12,()=>{const cs=[{re:1,im:0},{re:0,im:0},{re:-1,im:0}],r=candidate.rk45NewtonFlow(cs,{re:2.4,im:.8},{atol:1e-9,rtol:1e-8,tMax:20,hInitial:.08});const z=r.points.at(-1).z;return r.reason==='root'&&candidate.abs(candidate.sub(z,{re:1,im:0}))<2e-5&&r.accepted>2}],
+    ['RK45 rejection path',8,()=>{const cs=[{re:1,im:0},{re:0,im:0},{re:0,im:0},{re:-1,im:0}],r=candidate.rk45NewtonFlow(cs,{re:.01,im:.01},{atol:1e-12,rtol:1e-11,tMax:4,hInitial:1.5});return r.rejected>0&&r.points.every(p=>Number.isFinite(p.z.re+p.z.im+p.t))}],
+    ['normalized entropy',8,()=>{const g={width:4,height:2,labels:Int32Array.from([0,0,1,1,0,0,1,-1])};return close(candidate.basinEntropy(g),.985228136,1e-6)}],
+    ['box dimension',8,()=>{const n=32,a=new Int32Array(n*n);for(let y=0;y<n;y++)for(let x=0;x<n;x++)a[y*n+x]=x<y?0:1;const r=candidate.boxDimension({width:n,height:n,labels:a},{sizes:[1,2,4,8]});return r.counts.length===4&&r.dimension>.8&&r.dimension<1.2}],
+    ['marching squares',8,()=>{const g={width:3,height:3,labels:Int32Array.from([0,0,1,0,1,1,0,0,1])},s=candidate.marchingSquares(g);const keys=new Set(s.map(v=>JSON.stringify(v)));return s.length>=3&&keys.size===s.length&&s.flat(2).every(Number.isFinite)}]
+  ];
+  function paint(results){testsEl.innerHTML='';let total=0;results.forEach((ok,i)=>{if(ok)total+=checks[i][1];const d=document.createElement('div');d.className='test '+(ok?'pass':'fail');d.innerHTML=`<i class="dot"></i><span>${checks[i][0]}</span><b style="margin-left:auto">${ok?checks[i][1]:0}/${checks[i][1]}</b>`;testsEl.append(d)});$('#score').textContent=total;$('#scoreBar').style.width=total+'%';$('#verdict').textContent=total===100?'Visible gate cleared. Hidden invariants remain.':total>=80?'Close. Numerical edge cases still fail.':'Core incomplete or unstable.'}
+  run.onclick=async()=>{run.disabled=true;run.textContent='Testing…';const out=[];for(const [, ,fn] of checks){try{out.push(await Promise.race([Promise.resolve().then(fn),new Promise((_,r)=>setTimeout(()=>r(Error('timeout')),2500))]))}catch{out.push(false)}paint(out);await new Promise(r=>setTimeout(r,50))}run.disabled=false;run.textContent='Run deterministic checks'};
+  paint(checks.map(()=>false));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "riemann-newton-atlas-verification",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Optional real-browser verification for the Riemann–Newton Atlas",
+  "dependencies": {
+    "puppeteer-core": "^24.16.0"
+  }
+}
